@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Desafio das Lâminas</title>
+<style>
+:root{
+  --bg:#f7f3f8; --card:#ffffff; --ink:#2a1f33; --muted:#6f6479; --line:#e6dcea;
+  --hema:#5b3a8c; --hema-2:#7b55b5; --eosin:#d6457a; --eosin-soft:#fbe3ec;
+  --ok:#1f8a5b; --ok-soft:#e1f5ec; --bad:#c2384a; --bad-soft:#fbe4e7; --gold:#d99a1e;
+  --shadow:0 1px 2px rgba(42,31,51,.06),0 4px 16px rgba(42,31,51,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16121b; --card:#211b28; --ink:#f1ebf5; --muted:#a99db3; --line:#342b3e;
+    --hema:#a98be0; --hema-2:#c3aaf0; --eosin:#f07aa3; --eosin-soft:#3a2230;
+    --ok:#4cc790; --ok-soft:#173528; --bad:#f0758a; --bad-soft:#3d1d24; --gold:#f0b94a;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16121b; --card:#211b28; --ink:#f1ebf5; --muted:#a99db3; --line:#342b3e;
+  --hema:#a98be0; --hema-2:#c3aaf0; --eosin:#f07aa3; --eosin-soft:#3a2230;
+  --ok:#4cc790; --ok-soft:#173528; --bad:#f0758a; --bad-soft:#3d1d24; --gold:#f0b94a;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+.wrap{max-width:860px;margin:0 auto;padding:16px 16px 48px}
+header.top{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.logo{width:40px;height:40px;border-radius:50%;flex:none;background:radial-gradient(circle at 35% 35%,var(--eosin) 0 30%,transparent 31%),radial-gradient(circle at 65% 62%,var(--hema) 0 22%,transparent 23%),var(--eosin-soft);border:2px solid var(--line)}
+header.top h1{font-size:20px;margin:0;line-height:1.1}
+header.top .sub{color:var(--muted);font-size:13px}
+.spacer{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:14px;font-weight:600;white-space:nowrap}
+.pill .dot{width:8px;height:8px;border-radius:50%}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px}
+h2{font-size:17px;margin:0 0 10px}
+.muted{color:var(--muted)}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:14px 0}
+.mode{text-align:left;padding:16px;border-radius:14px;border:1px solid var(--line);background:var(--card);box-shadow:var(--shadow);transition:transform .08s,border-color .15s}
+.mode:hover{border-color:var(--hema-2);transform:translateY(-1px)}
+.mode b{display:block;font-size:16px;margin-bottom:2px}
+.mode span{color:var(--muted);font-size:14px}
+.mode .ic{font-size:22px;display:block;margin-bottom:6px}
+.mode.primary{background:linear-gradient(135deg,var(--hema),var(--eosin));color:#fff;border:none}
+.mode.primary span{color:rgba(255,255,255,.88)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px}
+.chip[aria-pressed="true"]{background:var(--hema);border-color:var(--hema);color:#fff}
+.chip[aria-pressed="true"] .muted{color:rgba(255,255,255,.8)}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.toggle{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;user-select:none}
+.toggle input{width:18px;height:18px;accent-color:var(--hema)}
+.mastery{display:grid;gap:10px}
+.mrow{display:grid;grid-template-columns:120px 1fr 54px;align-items:center;gap:10px;font-size:14px}
+.bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--hema),var(--eosin));border-radius:99px;transition:width .4s}
+.num{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+/* game */
+.gamebar{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.iconbtn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px}
+.progress{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--eosin);transition:width .3s}
+.stage{display:grid;gap:14px}
+.imgbox{position:relative;background:#111;border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:220px;max-height:48vh;cursor:zoom-in}
+.imgbox img{max-width:100%;max-height:48vh;display:block;object-fit:contain}
+.imgbox .tag{position:absolute;left:10px;top:10px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:4px 8px;border-radius:999px}
+.question{font-size:18px;font-weight:650}
+.opts{display:grid;gap:10px}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;padding:13px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-size:15px;line-height:1.35;transition:border-color .12s,background .12s}
+.opt:hover:not(:disabled){border-color:var(--hema-2)}
+.opt .k{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:13px;font-weight:700;background:var(--bg);color:var(--muted)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled{cursor:default}
+.feedback{border-radius:14px;padding:14px;border:1px solid var(--line);background:var(--card)}
+.feedback.ok{border-color:var(--ok);background:var(--ok-soft)}
+.feedback.bad{border-color:var(--bad);background:var(--bad-soft)}
+.feedback h3{margin:0 0 4px;font-size:16px}
+.feedback .ans{font-weight:700;font-size:16px}
+.feedback .tip{margin-top:6px}
+.feedback .src{margin-top:8px;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.feedback .src a{color:inherit}
+.btn{border:none;border-radius:12px;padding:12px 18px;font-weight:650;background:var(--hema);color:#fff}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.btn.bad{background:var(--bad)}
+.btn.ok{background:var(--ok)}
+.btn.wide{width:100%}
+.flash-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.combo{font-weight:700;color:var(--gold)}
+.hint{font-size:12px;color:var(--muted);text-align:center}
+/* results */
+.big{font-size:42px;font-weight:800;line-height:1}
+.errgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.errgrid figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.errgrid img{width:100%;height:110px;object-fit:cover;display:block;cursor:zoom-in}
+.errgrid figcaption{padding:8px;font-size:13px}
+/* gallery */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.gallery figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer}
+.gallery img{width:100%;height:130px;object-fit:cover;display:block}
+.gallery figcaption{padding:8px 10px;font-size:13px;line-height:1.3}
+.gallery .hidden-ans{color:transparent;background:var(--line);border-radius:4px}
+.search{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit}
+/* lightbox */
+.lightbox{position:fixed;inset:0;background:rgba(10,6,14,.92);display:none;align-items:center;justify-content:center;z-index:50;padding:16px;flex-direction:column;gap:10px}
+.lightbox.on{display:flex}
+.lightbox img{max-width:100%;max-height:82vh;border-radius:8px}
+.lightbox .cap{color:#fff;max-width:720px;text-align:center;font-size:15px}
+.hidden{display:none !important}
+@keyframes pop{0%{transform:scale(.96)}60%{transform:scale(1.02)}100%{transform:scale(1)}}
+.pop{animation:pop .25s ease}
+@media (max-width:520px){
+  .mrow{grid-template-columns:96px 1fr 44px}
+  .question{font-size:17px}
+  .flash-actions{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo" aria-hidden="true"></div>
+    <div>
+      <h1>Desafio das Lâminas</h1>
+      <div class="sub">Patologia Geral Veterinária</div>
+    </div>
+    <div class="spacer"></div>
+    <span class="pill" title="Dias seguidos estudando">🔥 <span id="streakDays">0</span></span>
+    <span class="pill" title="Pontos de experiência">⭐ <span id="xp">0</span></span>
+  </header>
+
+  <!-- HOME -->
+  <section id="home">
+    <div class="card">
+      <h2>O que vamos treinar?</h2>
+      <div class="chips" id="topicChips"></div>
+      <div class="row" style="margin-top:12px">
+        <label class="toggle"><input type="checkbox" id="onlyPratica"> Só imagens da prática (P1 / resumo)</label>
+      </div>
+      <div class="muted" id="poolInfo" style="font-size:13px;margin-top:6px"></div>
+    </div>
+
+    <div class="modes">
+      <button class="mode primary" data-mode="quiz"><span class="ic">🔬</span><b>Qual é a lesão?</b><span>Veja a lâmina/peça e escolha o diagnóstico. 10 rodadas.</span></button>
+      <button class="mode" data-mode="flash"><span class="ic">🃏</span><b>Flashcards</b><span>Tente lembrar sozinha, revele e diga se acertou.</span></button>
+      <button class="mode" data-mode="conceitos"><span class="ic">🧠</span><b>Conceitos</b><span>Perguntas de teoria: colorações, causas, diferenças.</span></button>
+      <button class="mode" data-mode="revisao"><span class="ic">🔁</span><b>Revisar erros</b><span id="reviewInfo">O que você errou volta aqui até fixar.</span></button>
+      <button class="mode" data-mode="galeria"><span class="ic">📚</span><b>Atlas</b><span>Todas as imagens com resposta e dica, para estudar.</span></button>
+    </div>
+
+    <div class="card">
+      <h2>Domínio por assunto</h2>
+      <div class="mastery" id="mastery"></div>
+      <p class="muted" style="font-size:13px;margin:12px 0 0">Uma imagem conta como “dominada” depois de acertar em dias diferentes (repetição espaçada). O que você erra volta mais vezes.</p>
+      <div class="row" style="margin-top:10px;justify-content:space-between">
+        <button class="iconbtn" id="themeBtn">🌓 Tema</button>
+        <button class="iconbtn" id="resetBtn">Zerar progresso</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="hidden">
+    <div class="gamebar">
+      <button class="iconbtn" id="quitBtn" aria-label="Sair">✕</button>
+      <div class="progress"><i id="prog" style="width:0"></i></div>
+      <span class="pill"><span id="score">0</span>/<span id="total">0</span></span>
+      <span class="pill combo hidden" id="comboPill">🔥 x<span id="combo">0</span></span>
+    </div>
+    <div class="stage" id="stage"></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results" class="hidden">
+    <div class="card" style="text-align:center">
+      <div class="muted">Resultado</div>
+      <div class="big" id="resScore">0/0</div>
+      <div id="resMsg" style="margin-top:6px"></div>
+      <div class="muted" id="resXp" style="margin-top:4px"></div>
+    </div>
+    <div id="resErrors" style="margin-top:14px"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="againBtn">Jogar de novo</button>
+      <button class="btn ghost" id="homeBtn">Início</button>
+    </div>
+  </section>
+
+  <!-- GALLERY -->
+  <section id="gallery" class="hidden">
+    <div class="gamebar">
+      <button class="iconbtn" id="galBack">← Voltar</button>
+      <div class="spacer"></div>
+      <label class="toggle"><input type="checkbox" id="hideAns"> Esconder respostas</label>
+    </div>
+    <input class="search" id="galSearch" placeholder="Buscar (ex.: rim, calcificação, Perls…)">
+    <div class="muted" id="galCount" style="font-size:13px;margin:8px 0"></div>
+    <div class="gallery" id="galGrid"></div>
+  </section>
+</div>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
+  <img id="lbImg" alt="">
+  <div class="cap" id="lbCap"></div>
+  <button class="btn ghost" style="color:#fff;border-color:#fff4" id="lbClose">Fechar</button>
+</div>
+
+<script src="dados-imagens.js?v=202611081441"></script>
+<script src="dados-conceitos.js?v=202611081441"></script>
+<script>
+(function(){
+  "use strict";
+  const VER = "202611081441";
+  const src = p => p + "?v=" + VER;
+  // se uma imagem falhar, tenta de novo 2x e, se não der, mostra o motivo no lugar
+  document.addEventListener("error", e=>{
+    const im = e.target; if (!im || im.tagName!=="IMG" || !im.dataset.base) return;
+    const n = +(im.dataset.retry||0);
+    if (n < 2){ im.dataset.retry = n+1; setTimeout(()=>{ im.src = im.dataset.base + "?v=" + VER + "&r=" + Date.now(); }, 400*(n+1)); return; }
+    const box = document.createElement("div");
+    box.style.cssText = "padding:16px;color:#fff;background:#3a2230;border-radius:10px;font-size:13px;text-align:center";
+    box.textContent = "Não consegui abrir " + im.dataset.base + ". Verifique se a pasta imagens/ está junto do index.html (extraia o .zip antes de abrir).";
+    im.replaceWith(box);
+  }, true);
+  const IMGS = window.IMAGENS || [];
+  const CONC = (window.CONCEITOS || []).map((c,i)=>Object.assign({id:"c"+i}, c));
+  const CATS = ["Degeneração","Adaptação","Morte celular","Pigmentos","Calcificação","Circulatório","Tanatologia"];
+  const ROUND = 10;
+  const DAY = 864e5;
+  const INTERVALS = [0, 10*60e3, 1*DAY, 3*DAY, 7*DAY, 21*DAY]; // caixa 0..5
+
+  // ---------- estado salvo ----------
+  const KEY = "desafio-laminas-v1";
+  function load(){
+    try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.cards) return s; } catch(e){}
+    return { cards:{}, xp:0, streak:0, lastDay:null, topics:CATS.slice(), onlyPratica:false };
+  }
+  let S = load();
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
+  function today(){ const d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
+  function touchStreak(){
+    const t = today(); if (S.lastDay === t) return;
+    const y = new Date(Date.now()-DAY); const yk = y.getFullYear()+"-"+(y.getMonth()+1)+"-"+y.getDate();
+    S.streak = (S.lastDay === yk) ? (S.streak||0)+1 : 1; S.lastDay = t;
+  }
+  function cs(id){ return S.cards[id] || (S.cards[id] = {box:0, due:0, seen:0, ok:0, bad:0, lastOkDay:null}); }
+  function grade(id, correct){
+    const c = cs(id); c.seen++;
+    if (correct){
+      c.ok++;
+      const t = today();
+      if (c.lastOkDay !== t || c.box < 1) c.box = Math.min(5, c.box+1); // sobe no máx. 1 caixa por dia (exceto a primeira)
+      c.lastOkDay = t;
+    } else { c.bad++; c.box = 0; }
+    c.due = Date.now() + INTERVALS[c.box];
+    touchStreak(); save();
+  }
+
+  // ---------- util ----------
+  const $ = s => document.querySelector(s);
+  const el = (tag, attrs, ...kids) => { const e=document.createElement(tag); if(attrs) for(const k in attrs){ if(k==="class") e.className=attrs[k]; else if(k.startsWith("on")) e.addEventListener(k.slice(2), attrs[k]); else e.setAttribute(k, attrs[k]); } kids.flat().forEach(k=>{ if(k==null) return; e.append(k.nodeType?k:document.createTextNode(k)); }); return e; };
+  const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; };
+  const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+
+  // ---------- home ----------
+  function pool(){
+    return IMGS.filter(i => S.topics.includes(i.cat) && (!S.onlyPratica || i.pratica));
+  }
+  function renderHome(){
+    $("#xp").textContent = S.xp||0;
+    $("#streakDays").textContent = S.streak||0;
+    const chips = $("#topicChips"); chips.innerHTML = "";
+    const all = el("button",{class:"chip","aria-pressed":String(S.topics.length===CATS.length), onclick:()=>{ S.topics = S.topics.length===CATS.length ? [] : CATS.slice(); save(); renderHome(); }}, "Tudo");
+    chips.append(all);
+    CATS.forEach(c=>{
+      const n = IMGS.filter(i=>i.cat===c).length;
+      chips.append(el("button",{class:"chip","aria-pressed":String(S.topics.includes(c)), onclick:()=>{ S.topics = S.topics.includes(c) ? S.topics.filter(x=>x!==c) : S.topics.concat(c); save(); renderHome(); }}, c+" ", el("span",{class:"muted"},"("+n+")")));
+    });
+    $("#onlyPratica").checked = !!S.onlyPratica;
+    const p = pool();
+    $("#poolInfo").textContent = p.length + " imagens selecionadas · " + CONC.filter(c=>S.topics.includes(c.cat)).length + " perguntas de conceito";
+    const now = Date.now();
+    const rev = IMGS.filter(i=>{ const c=S.cards[i.id]; return c && c.seen && (c.box===0 || c.due<=now); }).length
+              + CONC.filter(q=>{ const c=S.cards[q.id]; return c && c.seen && (c.box===0 || c.due<=now); }).length;
+    $("#reviewInfo").textContent = rev ? rev+" itens esperando revisão." : "Nada pendente agora. O que você errar aparece aqui.";
+    const m = $("#mastery"); m.innerHTML="";
+    CATS.forEach(c=>{
+      const items = IMGS.filter(i=>i.cat===c).map(i=>i.id).concat(CONC.filter(q=>q.cat===c).map(q=>q.id));
+      const dom = items.filter(id=>(S.cards[id]||{}).box>=3).length;
+      const pct = items.length ? Math.round(dom*100/items.length) : 0;
+      m.append(el("div",{class:"mrow"}, el("span",null,c), el("div",{class:"bar"}, el("i",{style:"width:"+pct+"%"})), el("span",{class:"num"}, pct+"%")));
+    });
+  }
+  $("#onlyPratica").addEventListener("change", e=>{ S.onlyPratica = e.target.checked; save(); renderHome(); });
+  document.querySelectorAll(".mode").forEach(b=>b.addEventListener("click", ()=>start(b.dataset.mode)));
+  $("#resetBtn").addEventListener("click", ()=>{ if(confirm("Apagar todo o progresso salvo neste navegador?")){ S = { cards:{}, xp:0, streak:0, lastDay:null, topics:CATS.slice(), onlyPratica:false }; save(); renderHome(); } });
+  $("#themeBtn").addEventListener("click", ()=>{
+    const r = document.documentElement; const cur = r.getAttribute("data-theme");
+    const dark = cur ? cur==="dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    r.setAttribute("data-theme", dark ? "light" : "dark"); S.theme = r.getAttribute("data-theme"); save();
+  });
+  if (S.theme) document.documentElement.setAttribute("data-theme", S.theme);
+
+  function show(id){ ["home","game","results","gallery"].forEach(s=>$("#"+s).classList.toggle("hidden", s!==id)); window.scrollTo(0,0); }
+
+  // ---------- seleção com repetição espaçada ----------
+  function pick(items, n){
+    const now = Date.now();
+    const due = [], fresh = [], rest = [];
+    items.forEach(it=>{ const c=S.cards[it.id]; if(!c||!c.seen) fresh.push(it); else if(c.due<=now) due.push(it); else rest.push(it); });
+    due.sort((a,b)=>cs(a.id).box-cs(b.id).box || cs(a.id).due-cs(b.id).due);
+    const out = due.slice(0, Math.ceil(n*0.6));
+    shuffle(fresh).forEach(x=>{ if(out.length<n) out.push(x); });
+    due.slice(out.length).forEach(x=>{ if(out.length<n && !out.includes(x)) out.push(x); });
+    rest.sort((a,b)=>cs(a.id).box-cs(b.id).box || Math.random()-.5).forEach(x=>{ if(out.length<n) out.push(x); });
+    // evita a mesma resposta duas vezes seguidas
+    const sh = shuffle(out);
+    for (let pass=0; pass<3; pass++)
+      for (let i=1;i<sh.length;i++) if ((sh[i].dx||sh[i].q)===(sh[i-1].dx||sh[i-1].q)) { const j=(i+2)%sh.length; [sh[i],sh[j]]=[sh[j],sh[i]]; }
+    return sh;
+  }
+
+  // alternativas extras (sem imagem própria) para deixar as opções mais difíceis
+  const EXTRA = {
+    "Degeneração":["Degeneração hidrópica","Esteatose (degeneração gordurosa)","Degeneração glicogênica","Amiloidose","Degeneração hialina"],
+    "Adaptação":["Atrofia","Displasia","Hipertrofia","Hiperplasia","Metaplasia","Hipoplasia"],
+    "Morte celular":["Necrose de coagulação","Necrose liquefativa","Necrose caseosa","Necrose gordurosa","Gangrena gasosa","Apoptose","Autólise"],
+    "Pigmentos":["Hemossiderina","Antracose","Melanose","Lipofuscina","Melanoma","Bilirrubina (colestase)","Vitiligo"],
+    "Calcificação":["Calcificação distrófica","Calcificação metastática","Calcificação idiopática (calcinose)","Necrose caseosa"],
+    "Circulatório":["Hiperemia","Congestão","Infarto branco","Infarto vermelho","Petéquias","Equimoses","Sufusão","Trombose","Coágulo post mortem","Edema subcutâneo"],
+    "Tanatologia":["Livores de hipostase","Embebição hemoglobínica","Embebição biliar","Saponificação","Mumificação","Maceração","Autólise","Pseudomelanose (putrefação)"]
+  };
+  // palavras "fortes" de um diagnóstico (sem parênteses/conectivos) – evita opções quase iguais
+  const STOP = new Set(["de","da","do","e","em","por","com","a","o","no","na"]);
+  const words = s => new Set(norm(s.replace(/\([^)]*\)/g,"")).split(/[^a-z]+/).filter(w=>w.length>1 && !STOP.has(w)));
+  function conflicts(a,b){
+    if (norm(a)===norm(b)) return true;
+    const A=words(a), B=words(b); const [s,l] = A.size<=B.size ? [A,B] : [B,A];
+    if (!s.size) return false;
+    for (const w of s) if (!l.has(w)) return false;
+    return true;
+  }
+  function distractorsFor(img){
+    const correct = img.dx;
+    const from = cats => shuffle([...new Set(IMGS.filter(i=>cats(i.cat)).map(i=>i.dx).concat(Object.keys(EXTRA).filter(cats).flatMap(c=>EXTRA[c])))]);
+    const same = from(c=>c===img.cat), diff = from(c=>c!==img.cat);
+    const picked = [];
+    const add = d => { if (picked.length<3 && !conflicts(d,correct) && !picked.some(p=>conflicts(p,d))) picked.push(d); };
+    same.forEach(add); diff.forEach(add);
+    return picked;
+  }
+
+  // ---------- jogo ----------
+  let G = null;
+  function start(mode){
+    if (mode==="galeria") return openGallery();
+    let items, kind;
+    if (mode==="quiz" || mode==="flash"){
+      items = pool(); kind = mode;
+      if (!items.length){ alert("Selecione pelo menos um assunto com imagens."); return; }
+      items = pick(items, ROUND);
+    } else if (mode==="conceitos"){
+      items = CONC.filter(c=>S.topics.includes(c.cat)); kind="conceito";
+      if (!items.length){ alert("Selecione pelo menos um assunto."); return; }
+      items = pick(items, ROUND);
+    } else if (mode==="revisao"){
+      const now = Date.now();
+      const need = it => { const c=S.cards[it.id]; return c && c.seen && (c.box===0 || c.due<=now); };
+      const a = IMGS.filter(need).map(i=>({kind:"quiz", item:i}));
+      const b = CONC.filter(need).map(q=>({kind:"conceito", item:q}));
+      const all = a.concat(b).sort((x,y)=>cs(x.item.id).box-cs(y.item.id).box);
+      if (!all.length){ alert("Nada para revisar agora 🎉 Jogue alguns rounds primeiro!"); return; }
+      G = { mode, queue: shuffle(all.slice(0, 15)), i:0, score:0, combo:0, xp:0, errors:[] };
+      show("game"); return next();
+    }
+    G = { mode, queue: items.map(it=>({kind, item:it})), i:0, score:0, combo:0, xp:0, errors:[] };
+    show("game"); next();
+  }
+
+  function updateBar(){
+    $("#prog").style.width = (G.i/G.queue.length*100)+"%";
+    $("#score").textContent = G.score; $("#total").textContent = G.queue.length;
+    $("#combo").textContent = G.combo; $("#comboPill").classList.toggle("hidden", G.combo<3);
+  }
+
+  function next(){
+    updateBar();
+    if (G.i >= G.queue.length) return finish();
+    const {kind, item} = G.queue[G.i];
+    if (kind==="quiz") renderQuiz(item);
+    else if (kind==="flash") renderFlash(item);
+    else renderConceito(item);
+  }
+
+  function imgBox(it, tag){
+    const img = el("img",{src:src(it.img), "data-base":it.img, alt:"Imagem para identificar", decoding:"async"});
+    const box = el("div",{class:"imgbox", onclick:()=>openLb(it.img, "")}, img, tag ? el("span",{class:"tag"}, tag) : null);
+    return box;
+  }
+  function tagFor(it){ return (it.pratica ? "Prática · " : it.credito ? "Internet · " : "") + it.cat; }
+
+  function answerUI(opts, correct, onDone){
+    const wrap = el("div",{class:"opts"});
+    const btns = opts.map((o,idx)=>el("button",{class:"opt", "data-v":o}, el("span",{class:"k"}, String(idx+1)), el("span",null,o)));
+    btns.forEach(b=>{ b.addEventListener("click", ()=>choose(b)); wrap.append(b); });
+    let done=false;
+    function choose(b){
+      if (done) return; done=true;
+      const ok = b.dataset.v===correct;
+      btns.forEach(x=>{ x.disabled=true; if(x.dataset.v===correct) x.classList.add("ok"); });
+      if (!ok) b.classList.add("bad");
+      onDone(ok);
+    }
+    wrap._keys = e => { const n=parseInt(e.key,10); if(n>=1&&n<=btns.length) choose(btns[n-1]); };
+    return wrap;
+  }
+
+  function feedback(ok, title, ans, tip, src, cred){
+    const f = el("div",{class:"feedback pop "+(ok?"ok":"bad")},
+      el("h3",null, ok ? pickMsg(true) : pickMsg(false)),
+      el("div",{class:"ans"}, ans),
+      tip ? el("div",{class:"tip"}, "💡 "+tip) : null,
+      src ? el("div",{class:"src"}, "Fonte: "+src) : null,
+      cred ? el("div",{class:"src"}, "Imagem: ", el("a",{href:cred.url, target:"_blank", rel:"noopener"}, cred.texto)) : null);
+    return f;
+  }
+  const OKM = ["Acertou! 🎉","Isso aí! ✨","Mandou bem! 💜","Perfeito! 🔬","Exato! 👏"];
+  const BADM = ["Quase! Olha a resposta:","Não foi dessa vez:","Errou, mas agora fixa:"];
+  function pickMsg(ok){ const a = ok?OKM:BADM; return a[Math.floor(Math.random()*a.length)]; }
+
+  function scored(ok, item){
+    grade(item.id, ok);
+    if (ok){ G.score++; G.combo++; const gain = 10 + Math.min(10, (G.combo-1)*2); G.xp += gain; S.xp=(S.xp||0)+gain; }
+    else { G.combo=0; G.errors.push(G.queue[G.i]); }
+    save(); updateBar(); $("#xp").textContent=S.xp;
+  }
+
+  let keyHandler = null;
+  function setKeys(fn){ keyHandler = fn; }
+  document.addEventListener("keydown", e=>{ if ($("#lightbox").classList.contains("on")) { if(e.key==="Escape") closeLb(); return; } if(keyHandler) keyHandler(e); });
+
+  function nextBtn(){
+    const b = el("button",{class:"btn wide", onclick:()=>{ G.i++; next(); }}, G.i+1>=G.queue.length ? "Ver resultado" : "Próxima →");
+    setKeys(e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); b.click(); } });
+    setTimeout(()=>b.focus({preventScroll:true}), 30);
+    return b;
+  }
+
+  function renderQuiz(it){
+    const st = $("#stage"); st.innerHTML="";
+    const correct = it.dx;
+    const opts = shuffle([correct].concat(distractorsFor(it)));
+    const fbHost = el("div");
+    const ui = answerUI(opts, correct, ok=>{
+      scored(ok, it);
+      fbHost.append(feedback(ok, "", it.resposta, it.dica, it.fonte, it.credito), el("div",{style:"height:10px"}), nextBtn());
+      fbHost.scrollIntoView({behavior:"smooth", block:"nearest"});
+    });
+    st.append(imgBox(it, tagFor(it)), el("div",{class:"question"}, "Qual é a alteração?"), ui, fbHost, el("div",{class:"hint"},"Atalhos: 1–4 para responder · Enter para avançar · toque na imagem para ampliar"));
+    setKeys(ui._keys);
+  }
+
+  function renderFlash(it){
+    const st = $("#stage"); st.innerHTML="";
+    const area = el("div");
+    const reveal = el("button",{class:"btn wide", onclick:doReveal}, "Mostrar resposta");
+    function doReveal(){
+      area.innerHTML="";
+      const f = el("div",{class:"feedback pop"}, el("div",{class:"ans"}, it.resposta), it.dica?el("div",{class:"tip"},"💡 "+it.dica):null, el("div",{class:"src"},"Fonte: "+it.fonte), it.credito ? el("div",{class:"src"},"Imagem: ", el("a",{href:it.credito.url,target:"_blank",rel:"noopener"},it.credito.texto)) : null);
+      const acts = el("div",{class:"flash-actions"},
+        el("button",{class:"btn bad", onclick:()=>rate(false)}, "Errei"),
+        el("button",{class:"btn ghost", onclick:()=>rate(false, true)}, "Quase"),
+        el("button",{class:"btn ok", onclick:()=>rate(true)}, "Acertei"));
+      area.append(f, el("div",{style:"height:10px"}), acts, el("div",{class:"hint",style:"margin-top:8px"},"Teclas: 1 errei · 2 quase · 3 acertei"));
+      setKeys(e=>{ if(e.key==="1") rate(false); if(e.key==="2") rate(false,true); if(e.key==="3") rate(true); });
+    }
+    let rated=false;
+    function rate(ok, almost){
+      if (rated) return; rated=true;
+      if (almost){ const c=cs(it.id); c.seen++; c.box=Math.max(0,c.box-1); c.due=Date.now()+INTERVALS[1]; touchStreak(); save(); G.combo=0; G.errors.push(G.queue[G.i]); updateBar(); }
+      else scored(ok, it);
+      G.i++; next();
+    }
+    area.append(reveal);
+    setKeys(e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); doReveal(); } });
+    st.append(imgBox(it, tagFor(it)), el("div",{class:"question"}, "Qual é a alteração? Pense antes de revelar."), area);
+  }
+
+  function renderConceito(q){
+    const st = $("#stage"); st.innerHTML="";
+    const opts = shuffle([q.a].concat(shuffle(q.e).slice(0,3)));
+    const fbHost = el("div");
+    const ui = answerUI(opts, q.a, ok=>{
+      scored(ok, q);
+      fbHost.append(feedback(ok, "", q.a, q.x, null), el("div",{style:"height:10px"}), nextBtn());
+      fbHost.scrollIntoView({behavior:"smooth", block:"nearest"});
+    });
+    st.append(el("span",{class:"pill",style:"justify-self:start"}, q.cat), el("div",{class:"question"}, q.q), ui, fbHost);
+    setKeys(ui._keys);
+  }
+
+  function finish(){
+    setKeys(null);
+    show("results");
+    const n = G.queue.length, s = G.score, pct = n ? s/n : 0;
+    $("#resScore").textContent = s+"/"+n;
+    $("#resMsg").textContent = pct===1 ? "Gabaritou! Professora orgulhosa 💜" : pct>=.8 ? "Excelente! Quase lá." : pct>=.5 ? "Bom! Os erros vão voltar na revisão." : "Calma, é assim que fixa. Bora revisar os erros.";
+    $("#resXp").textContent = "+"+G.xp+" XP";
+    const host = $("#resErrors"); host.innerHTML="";
+    if (G.errors.length){
+      host.append(el("h2",null,"Para revisar"));
+      const grid = el("div",{class:"errgrid"});
+      G.errors.forEach(({kind,item})=>{
+        if (item.img) grid.append(el("figure",null, el("img",{src:src(item.img), "data-base":item.img, alt:item.resposta, onclick:()=>openLb(item.img, item.resposta+(item.dica?" — "+item.dica:""))}), el("figcaption",null, el("b",null,item.resposta))));
+        else grid.append(el("figure",null, el("figcaption",null, el("div",{class:"muted"},item.q), el("b",null,item.a))));
+      });
+      host.append(grid);
+    }
+    const mode = G.mode;
+    $("#againBtn").onclick = ()=>start(mode);
+    $("#homeBtn").onclick = ()=>{ renderHome(); show("home"); };
+    setKeys(e=>{ if(e.key==="Enter") $("#againBtn").click(); });
+  }
+
+  $("#quitBtn").addEventListener("click", ()=>{ setKeys(null); renderHome(); show("home"); });
+
+  // ---------- atlas ----------
+  function openGallery(){
+    setKeys(null); show("gallery"); drawGallery();
+  }
+  function drawGallery(){
+    const q = norm($("#galSearch").value.trim());
+    const hide = $("#hideAns").checked;
+    const list = pool().filter(i=>!q || norm(i.resposta+" "+i.dica+" "+i.cat+" "+i.fonte).includes(q));
+    $("#galCount").textContent = list.length+" imagens" + (hide ? " · toque para revelar" : "");
+    const g = $("#galGrid"); g.innerHTML="";
+    list.forEach(i=>{
+      const cap = el("figcaption",null, el("b",{class:hide?"hidden-ans":""}, i.resposta), el("div",{class:"muted",style:"font-size:12px"}, i.cat + (i.pratica?" · prática":i.credito?" · internet":"")));
+      g.append(el("figure",{onclick:()=>{ if(hide && cap.firstChild.classList.contains("hidden-ans")) { cap.firstChild.classList.remove("hidden-ans"); return; } openLb(i.img, i.resposta+" — "+i.dica+(i.credito?"  ·  Imagem: "+i.credito.texto:"")); }}, el("img",{src:src(i.img), "data-base":i.img, alt:hide?"":i.resposta, decoding:"async"}), cap));
+    });
+  }
+  $("#galSearch").addEventListener("input", drawGallery);
+  $("#hideAns").addEventListener("change", drawGallery);
+  $("#galBack").addEventListener("click", ()=>{ renderHome(); show("home"); });
+
+  // ---------- lightbox ----------
+  function openLb(u, cap){ $("#lbImg").src=src(u); $("#lbCap").textContent=cap||""; $("#lightbox").classList.add("on"); }
+  function closeLb(){ $("#lightbox").classList.remove("on"); }
+  $("#lbClose").addEventListener("click", closeLb);
+  $("#lightbox").addEventListener("click", e=>{ if(e.target.id==="lightbox") closeLb(); });
+
+  renderHome();
+})();
+</script>
+</body>
+</html>

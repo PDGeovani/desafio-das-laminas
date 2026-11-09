@@ -1,0 +1,35 @@
+DESAFIO DAS LÂMINAS – Patologia Geral Veterinária
+=================================================
+
+Como abrir
+----------
+Dê dois cliques em "index.html" (abre no navegador). Não precisa de internet.
+O progresso fica salvo no próprio navegador (se trocar de navegador/computador, começa do zero).
+
+Modos
+-----
+- Qual é a lesão?  -> aparece uma lâmina/peça e 4 alternativas. 10 rodadas.
+- Flashcards       -> tente lembrar sozinha, revele a resposta e marque Errei / Quase / Acertei.
+- Conceitos        -> perguntas de teoria (colorações, causas, diferenças, tanatologia...).
+- Revisar erros    -> tudo que você errou volta aqui até fixar.
+- Atlas            -> todas as imagens com resposta e dica (dá para esconder as respostas e buscar).
+
+Imagens com a etiqueta "Internet" vieram do Wikimedia Commons (licença livre). Várias são de patologia humana:
+as lesões gerais (esteatose, necrose, trombo...) têm o mesmo aspecto, mas na prova vale o material da aula.
+
+Dica: marque "Só imagens da prática (P1 / resumo)" para treinar só as lâminas e peças da aula prática.
+Teclado: 1–4 responde, Enter avança, clique na imagem para ampliar.
+
+Como funciona a memorização
+---------------------------
+Repetição espaçada: o que você erra volta logo; o que você acerta volta cada vez mais espaçado
+(10 min, 1 dia, 3 dias, 7 dias, 21 dias). Uma imagem só fica "dominada" depois de acertar em dias diferentes.
+
+Arquivos
+--------
+index.html            o jogo
+dados-imagens.js      as 192 imagens (156 das aulas + 36 da internet) com resposta, dica e fonte
+dados-conceitos.js    as 110 perguntas de teoria (dá para editar num bloco de notas)
+imagens/              recortes tirados dos PDFs
+materiais/            os PDFs originais das aulas (não vão no .zip, para ficar leve – ela já tem os PDFs)
+CREDITOS-IMAGENS-INTERNET.txt  autor e licença de cada imagem tirada da internet (Wikimedia Commons)
